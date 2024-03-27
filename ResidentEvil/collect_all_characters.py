@@ -1,6 +1,9 @@
 # %%
 import requests
 from bs4 import BeautifulSoup
+from tqdm import tqdm
+import pandas as pd
+
 
 # %%
 headers = {
@@ -30,7 +33,6 @@ def get_basic_infos(soup):
     ems  = paragrafo.find_all('em')
     data = {}
     for i in ems:
-        print(i)
         chave, valor, *_ = i.text.split(':')
         chave = chave.strip(' ')
         data[chave] = valor.strip(' ')
@@ -67,12 +69,29 @@ def get_links():
     links = [i['href'] for i in ancoras ]
     return links
 
-
 # %%
 links = get_links()
 data = []
-for i in links:
-    print(i)
+for i in tqdm(links):
     d = get_personagens_info(i)
     d['links'] = i
+    nome = i.strip('/').split('/')[-1].replace('-', ' ').title()
+    d['Nome'] = nome
     data.append(d)
+
+# %%
+df = pd.DataFrame(data)
+df
+
+# %%
+df [~df['de nascimento'].isna()]
+
+# %%
+df.to_csv('dados_re.csv', index=False, sep=";")
+
+
+# %%
+df.to_parquet('dados_re.parquet', index=False)
+
+# %%
+df.to_pickle('dados_re.pkl')
